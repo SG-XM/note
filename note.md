@@ -392,11 +392,32 @@ https://blog.csdn.net/u010651249/article/details/83899049
 
 ---
 
-## HTTP&HTTPS&HSTS&短链接与长连接
+## HTTP&HTTPS&HSTS
+
+<https://www.cnblogs.com/upyun/p/7447977.html> 
+
+<https://mp.weixin.qq.com/s/wuHj7l1x1kE7N3RxQUBxxQ> 
+
+- HTTP 属于 TCP/IP 模型中的应用层协议 ；HTTP 1.0 时，浏览器每次访问都要单独建立连接，这会造成资源的浪费；后来HTTP 1.1可以在一次连接中处理多个请求，并且将多个请求重叠进行
+- 在HTTP下加入了SSL层，而后才是 TCP 层
+- Web 浏览器将支持的加密信息发送给网站服务器，网站服务器会选择出一套加密算法和哈希算法，将验证身份的信息以证书（证书发布CA机构、证书有效期、公钥、证书所有者、签名等）的形式发送给Web浏览器 
+- 浏览器验证证书的合法性，当证书受信之后，Web 浏览器会随机生成一串密码，并使用证书中的公钥加密。之后就是使用约定好的哈希算法哈希握手消息，并生成随机数对消息进行加密，再将之前生成的信息发送给网站； 
+- 当网站服务器接收到浏览器发送过来的数据后，会使用网站本身的私钥将信息解密确定密码，然后通过密码解密Web浏览器发送过来的握手信息，并验证哈希是否与Web浏览器一致。然后服务器会使用密码加密新的握手信息，发送给浏览器 
+- 最后浏览器解密并计算经过哈希算法加密的握手消息，如果与服务发送过来的哈希一致，则此握手过程结束后，服务器与浏览器会使用之前浏览器生成的随机密码和对称加密算法进行加密交换数据 
+- 数字签名：签名就是在信息的后面再加上一段内容（信息经过 hash 后的值），可以证明信息没有被修改过。hash 值一般都会加密后（也就是签名）再和信息一起发送，以保证这个 hash 值不被修改。 
+- 当你在浏览器里开启了 HSTS 之后，浏览器会直接发起 https 请求，而不会出现第一次的 http 明文请求和 301 重定向，`Strict-Transport-Security: <max-age=>[; includeSubDomains][; preload] `协议头会指定有效时间内都使用 https 请求。但是第一次还是会存在http，所以会有 preload 内置在浏览器内，列表里的域名，无论何时、何种情况，浏览器都只使用HTTPS发起连接 `chrome://net-internals/#hsts `
 
 ## DNS查询
 
+<https://www.baidu.com/link?url=5Z77ywV-OmubSJkx1DEJbOwOEULZlkj1JN_pX1sQYR97JH2fPt-rvP45L74wvbTd4aOXsJLBHMDIXHHsKYrFv_&wd=&eqid=e6300c13001c1487000000035cc19cc0> 
 
+- `dig math.stackexchange.com` 可以展示整个查询过程，`dig`命令有一个`@`参数，显示向其他DNS服务器查询的结果 
+- DNS服务器的IP地址，有可能是动态的，每次上网时由网关分配，这叫做DHCP机制，本机只向自己的DNS服务器查询，本机的DNS服务器比如是`192.168.1.253`，这是一个内网地址。有一些公网的DNS服务器，也可以使用，其中最有名的就是Google的[`8.8.8.8`](https://developers.google.com/speed/public-dns/)和Level 3的[`4.2.2.2`](https://www.tummy.com/articles/famous-dns-server/) 
+- `host.sld.tld.root` 如 www.example.com ，example 是主机名，www 就是三级域名，用户在自己的域里可以任意分配
+- 从"根域名服务器"查到"顶级域名服务器"的NS记录和A记录（IP地址）；从"顶级域名服务器"查到"次级域名服务器"的NS记录和A记录（IP地址）；从"次级域名服务器"查出"主机名"的IP地址；根域名服务器"的NS记录和IP地址一般是不会变化的，所以内置在DNS服务器里面 
+- `NS`：域名服务器记录（Name Server），返回保存下一级域名信息的服务器地址。该记录只能设置为域名，不能设置为IP地址
+- `CNAME`记录就是一个替换，所以域名一旦设置`CNAME`记录以后，就不能再设置其他记录了（比如`A`记录和`MX`记录），这是为了防止产生冲突 
+- GFW 实现就是因为 DNS 查询是  UDP 协议且明确指定 53 端口，明文不是基于连接的，无校验，GFW会伪装成DNS服务器，给查询者返回伪造的 DNS 响应包。相对于实际的 DNS 响应，伪造的响应显然能够更早地抵达查询者，为抢答
 
 ## App 测试
 
@@ -609,6 +630,24 @@ https://blog.csdn.net/wangyang1354/article/details/49448007
 - 对于图片来说我们分为强引用和软引用缓存两个部分，都采用 LRU，将引用放到 LinkedHashMap 中，初始化时会设置缓存空间大小
 - LRU（Least Recently Used ）缓存满的时候删除最近最少使用的，其会每次调用时将访问的数据放到队列尾部，则头部为没有访问的数据，LRUCache 使用 LinkedHashMap，且 accessOrder = true. LruCache 缓存在内存中
 - Bitmap 优化的核心就是采用 BitmapFactory.Options 来加载，inSampleSize 参数决定了采样率，一般为 2 的指数 2，4，8 ... 加载前预估图片所需内存，展示控件的实际大小，屏幕的分辨率
+
+---
+
+## RecyclerView
+
+<https://juejin.im/post/5c696ba9e51d457f136d24ff> 
+
+<https://www.jianshu.com/p/9306b365da57> 
+
+- 复用和缓存针对的是 viewHolder，viewHolder 中持有 view 的引用
+
+- 四级缓存：mAttachedScrap，mCachedViews，ViewCacheExtension，RecycledViewPool
+- mAttachedScrap:  在 onLayoutChild 时会将所有的 viewHolder 放入，不需要考虑这个
+- mCachedViews: 复用且不需要绑定数据；mRecyclerPool：复用但需要重新绑定数据；未命中： 创建加数据绑定
+- 从 mCachedViews 中取出的 viewHolder 只会放到对应位置，会做 postion 检查，默认缓存数量为2，满了替换最老的缓存，被替换调的 viewHolder 会放入 Pool 中
+- RecycledViewPool 中是按照 ViewType 来进行缓存的，是一个二维数组，每种 type 默认缓存 5 个，满了直接放弃，不存在缓存替换策略
+- 回收是由 MotionEvent.ACTION_MOVE 触发的，RecyclerView 的滚动是由 LayoutManager 来处理的，LayoutManager 会接着调用 fill() 方法去处理需要复用和回收的卡位 
+- **mAttachedScrap**  用于可见表项的回收和复用，比如说 notifyDatasetChanged
 
 ## 待看，反射，注解, Retrofit, ConcurrentSkipListMap & 自旋锁 
 
